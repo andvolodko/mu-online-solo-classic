@@ -1,6 +1,7 @@
 # MU Online Solo Classic (0.97k) - WebAssembly Server & Engine
 
 [![Play Online](https://img.shields.io/badge/Play%20Online-GitHub%20Pages-2ea44f?style=for-the-badge&logo=github&logoColor=white)](https://andvolodko.github.io/mu-online-solo-classic/)
+[![Support on Donatello](https://img.shields.io/badge/%E2%99%A5%20Support-Donatello-f43f5e?style=for-the-badge)](https://donatello.to/andvolodko)
 
 [![WebAssembly](https://img.shields.io/badge/WebAssembly-WASM-654FF0?logo=webassembly&logoColor=white)](https://webassembly.org/)
 [![C++17](https://img.shields.io/badge/C%2B%2B-17-00599C?logo=c%2B%2B&logoColor=white)](https://isocpp.org/)
@@ -8,7 +9,8 @@
 [![Status](https://img.shields.io/badge/Server-100%25%20Client--Side-brightgreen)](https://github.com/andvolodko/mu-online-solo-classic)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE.md)
 
-> 🎮 **Play Live in Browser:** **[https://andvolodko.github.io/mu-online-solo-classic/](https://andvolodko.github.io/mu-online-solo-classic/)**
+> 🎮 **Play Live in Browser:** **[https://andvolodko.github.io/mu-online-solo-classic/](https://andvolodko.github.io/mu-online-solo-classic/)**  
+> 💖 **Support Project:** **[https://donatello.to/andvolodko](https://donatello.to/andvolodko)**
 >
 > A complete, standalone **MU Online Season 0.97k GameServer engine** compiled to **WebAssembly (WASM)** via **Emscripten** for pure client-side solo gameplay directly in modern web browsers.
 
@@ -211,6 +213,9 @@ node src/server/test_node.cjs
 
 ### 🌐 Play Online (No Installation Required)
 Directly in modern browsers: **[https://andvolodko.github.io/mu-online-solo-classic/](https://andvolodko.github.io/mu-online-solo-classic/)**
+
+### 💖 Support the Project
+Support development on Donatello: **[https://donatello.to/andvolodko](https://donatello.to/andvolodko)**
 
 ### 💻 Local Development Server
 To run locally on your machine:

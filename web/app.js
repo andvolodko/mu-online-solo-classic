@@ -872,6 +872,23 @@ window.muInstallTopBar = function () {
     });
   }
 
+  // Google Analytics outbound tracking for Support link
+  var linkSupport = document.getElementById('muLinkSupport');
+  if (linkSupport) {
+    linkSupport.addEventListener('click', function () {
+      if (typeof window.gtag === 'function') {
+        var targetUrl = linkSupport.href || 'https://donatello.to/andvolodko';
+        window.gtag('event', 'support_click', {
+          event_category: 'engagement',
+          event_label: targetUrl,
+          link_url: targetUrl,
+          link_text: 'Support',
+          transport_type: 'beacon'
+        });
+      }
+    });
+  }
+
   document.addEventListener('fullscreenchange', window.muUpdateFsIcons);
   document.addEventListener('webkitfullscreenchange', window.muUpdateFsIcons);
 
