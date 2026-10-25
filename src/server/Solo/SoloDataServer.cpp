@@ -64,6 +64,57 @@ static std::string GetWarehouseFilePath(const char* account)
 	return g_SaveDirectory + "/warehouse_" + std::string(account) + ".dat";
 }
 
+// The character list stores 5 bytes per worn item, but a saved item is 10.
+// DGCharacterListRecv rebuilds the item index as
+//   byte0 + ((byte2 & 0x80) * 2) + ((byte4 & 0xF0) * 32)
+// and reads the level from byte1 and excellent bits from byte2 & 0x3F.
+// Those fields live in DB bytes 0, 1, 7 and 9. Copying the first 5 DB bytes
+// keeps the low index and then treats durability and the serial as the rest,
+// so the select screen draws a different model than the one worn in game.
+static void PackCharacterListItem(const BYTE* dbItem, BYTE* preview)
+{
+	if (dbItem[0] == 0xFF && (dbItem[7] & 0x80) == 0x80 && (dbItem[9] & 0xF0) == 0xF0)
+	{
+		std::memset(preview, 0xFF, 5);
+		return;
+	}
+
+	preview[0] = dbItem[0];
+	preview[1] = dbItem[1];
+	preview[2] = (BYTE)((dbItem[7] & 0x80) | (dbItem[7] & 0x3F));
+	preview[3] = 0;
+	preview[4] = (BYTE)(dbItem[9] & 0xF0);
+}
+
+static void PackCharacterListEquipment(const BYTE inventory[][MAX_ITEM_BYTE_SIZE], BYTE equipment[60])
+{
+	std::memset(equipment, 0xFF, 60);
+	for (int s = 0; s < 9; ++s)
+	{
+		PackCharacterListItem(inventory[s], &equipment[s * 5]);
+	}
+}
+
+// Saved characters already have the truncated preview. Rebuild it from the
+// full inventory so the select screen matches without another equipment change.
+static void RefreshCharacterListEquipment(const char* name, BYTE equipment[60])
+{
+	std::ifstream file(GetCharacterFilePath(name), std::ios::binary);
+	if (!file.is_open())
+	{
+		return;
+	}
+
+	SDHP_CHARACTER_INFO_SAVE_SEND saved;
+	file.read(reinterpret_cast<char*>(&saved), sizeof(saved));
+	if (file.gcount() != sizeof(saved))
+	{
+		return;
+	}
+
+	PackCharacterListEquipment(saved.Inventory, equipment);
+}
+
 static bool LoadAccountData(const char* account, SOLO_ACCOUNT_DATA& data)
 {
 	std::memset(&data, 0, sizeof(data));
@@ -242,6 +293,7 @@ void SoloDataServer_ProcessPacket(BYTE* lpMsg, int size)
 						pEntries[i].Class = accData.characters[i].Class;
 						pEntries[i].CtlCode = accData.characters[i].CtlCode;
 						std::memcpy(pEntries[i].Inventory, accData.characters[i].equipment, sizeof(pEntries[i].Inventory));
+						RefreshCharacterListEquipment(accData.characters[i].name, pEntries[i].Inventory);
 					}
 
 					LogAdd(LOG_BLUE, "[SoloDataServer] Sent character list (%d chars) for account: %s", accData.characterCount, lpSend->account);
@@ -501,10 +553,7 @@ void SoloDataServer_ProcessPacket(BYTE* lpMsg, int size)
 							{
 								accData.characters[i].level = lpSave->Level;
 								accData.characters[i].Class = lpSave->Class;
-								for (int s = 0; s < 9; ++s)
-								{
-									std::memcpy(&accData.characters[i].equipment[s * 5], lpSave->Inventory[s], 5);
-								}
+								PackCharacterListEquipment(lpSave->Inventory, accData.characters[i].equipment);
 								break;
 							}
 						}
@@ -580,10 +629,7 @@ void SoloDataServer_ProcessPacket(BYTE* lpMsg, int size)
 						{
 							if (std::strcmp(accData.characters[i].name, lpSave->name) == 0)
 							{
-								for (int s = 0; s < 9; ++s)
-								{
-									std::memcpy(&accData.characters[i].equipment[s * 5], lpSave->Inventory[s], 5);
-								}
+								PackCharacterListEquipment(lpSave->Inventory, accData.characters[i].equipment);
 								break;
 							}
 						}

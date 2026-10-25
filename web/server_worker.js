@@ -2,7 +2,7 @@
 const workerParams = (typeof self !== 'undefined' && self.location && self.location.search) 
     ? new URLSearchParams(self.location.search) 
     : new URLSearchParams('');
-const WORKER_VERSION = workerParams.get('v') || 'login102';
+const WORKER_VERSION = workerParams.get('v') || 'login103';
 
 importScripts(`muserver.js?v=${WORKER_VERSION}`);
 
