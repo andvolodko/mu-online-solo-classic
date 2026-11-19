@@ -49,6 +49,7 @@ Browsers aggressively cache WebAssembly binary files, Web Workers, stylesheets, 
 
 ## 3. Running & Testing Locally
 
+0. Fresh clones / ZIP downloads only: `web/shell_login.data` is a Git LFS file. Get the real ~220 MB bundle via `git lfs pull` (needs git-lfs) or `node web/fetch-assets.cjs` (downloads from the `game-assets` GitHub Release, falls back to live Pages URL). `serve.cjs` warns on startup if the file is still an LFS pointer.
 1. Start the local development server (serves on port 8088 with CDN gzip simulation and appropriate MIME headers):
    ```bash
    node web/serve.cjs

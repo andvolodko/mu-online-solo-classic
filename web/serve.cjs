@@ -24,15 +24,33 @@ function getGzipBuffer(filePath) {
     }
 }
 
+// Git LFS pointer files start with this header; they are ~130 bytes instead of ~220 MB
+function isLfsPointer(filePath) {
+    try {
+        const fd = fs.openSync(filePath, 'r');
+        const buf = Buffer.alloc(64);
+        const n = fs.readSync(fd, buf, 0, 64, 0);
+        fs.closeSync(fd);
+        return buf.subarray(0, n).toString('utf8').startsWith('version https://git-lfs.github.com/spec');
+    } catch (e) {
+        return false;
+    }
+}
+
 // Background pre-compression of shell_login.data so local startup has 0 latency
 setImmediate(() => {
     const dataPath = path.join(WEB_DIR, 'shell_login.data');
-    if (fs.existsSync(dataPath)) {
-        console.log('  [GZIP] Pre-compressing shell_login.data in background...');
-        const gz = getGzipBuffer(dataPath);
-        if (gz) {
-            console.log(`  [GZIP] Ready: ${(gz.length / (1024 * 1024)).toFixed(1)} MB (CDN gzip simulation)`);
-        }
+    if (!fs.existsSync(dataPath) || isLfsPointer(dataPath)) {
+        console.warn('  [ASSETS] web/shell_login.data is missing or is a Git LFS pointer file.');
+        console.warn('  [ASSETS] The game client will boot to a black screen. Fix with one of:');
+        console.warn('  [ASSETS]   - node web/fetch-assets.cjs   (downloads ~220 MB)');
+        console.warn('  [ASSETS]   - git lfs pull                (requires git-lfs installed)');
+        return;
+    }
+    console.log('  [GZIP] Pre-compressing shell_login.data in background...');
+    const gz = getGzipBuffer(dataPath);
+    if (gz) {
+        console.log(`  [GZIP] Ready: ${(gz.length / (1024 * 1024)).toFixed(1)} MB (CDN gzip simulation)`);
     }
 });
 

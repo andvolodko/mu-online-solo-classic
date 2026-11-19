@@ -218,13 +218,24 @@ Directly in modern browsers: **[https://andvolodko.github.io/mu-online-solo-clas
 Support development on Donatello: **[https://donatello.to/andvolodko](https://donatello.to/andvolodko)**
 
 ### 💻 Local Development Server
-To run locally on your machine:
+
+**Step 1 — get the game assets.** The ~220 MB client asset bundle `web/shell_login.data` is stored via **Git LFS**, so it must be downloaded separately from the source code:
+
+- **Cloned with git:** install [git-lfs](https://git-lfs.com/) and run `git lfs pull` (or install git-lfs *before* cloning — then it just works). Without git-lfs the file is only a ~130-byte pointer and the game boots to a black screen.
+- **Downloaded as ZIP** (GitHub ZIPs never include LFS files) **or no git-lfs available:** run the bundled fetch script — it downloads the real file from a GitHub Release, falling back to the live site, and resumes interrupted downloads:
+  ```bash
+  node web/fetch-assets.cjs
+  ```
+
+**Step 2 — start the server:**
 
 ```bash
 # Start the local development server (port 8088)
 node web/serve.cjs
 ```
 *(Alternatively, you can use Python: `python3 -m http.server 8088 -d web`)*
+
+`serve.cjs` checks the asset bundle on startup and prints instructions if it is missing or still an LFS pointer.
 
 Open your browser at: **[http://127.0.0.1:8088](http://127.0.0.1:8088)**
 
