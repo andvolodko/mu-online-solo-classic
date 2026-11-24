@@ -68,7 +68,8 @@ DWORD CFrameLimiter::Wait(const StartTime& start)
         s_lastTicks = ticks;
     }
     if (elapsed < 0) elapsed = 0;
-    if (elapsed > 40.0) elapsed = 40.0;
+    // Preserve combat time under load; cap recovery after long stalls.
+    if (elapsed > 120.0) elapsed = 120.0;
     (void)start;
     elapsed += m_FractionMilliseconds;
     const DWORD milliseconds = (DWORD)elapsed;

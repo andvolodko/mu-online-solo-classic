@@ -327,3 +327,5 @@ lib/libjpeg/jpeg-6b/jquant2.c
 lib/libjpeg/jpeg-6b/jutils.c
 lib/libjpeg/jpeg-6b/jmemmgr.c
 lib/libjpeg/jpeg-6b/jmemansi.c
+browser/mu_gdi.cpp
+browser/mu_profile.cpp

@@ -22,6 +22,17 @@
 #include <string.h>
 #include <time.h>
 
+// WinMain.cpp is not linked into the browser client. Keep its lifecycle
+// entry points available to the shared window procedure and scene dispatcher.
+void __cdecl FreeDirectSound(void);
+void OpenGL_Release(void)
+{
+    FreeDirectSound();
+    gWindow.ReleaseOpenGL();
+}
+
+void GameGuard_TickCheck(void) {}
+
 extern "C" short Mu_AsyncKeyState[256] = {};
 extern "C" void mu_mesh_flush(void);
 extern "C" void* ChatListBox_ConstructWhisper(void);

@@ -423,34 +423,40 @@ LAB_00445110:
     }
 }
 
-// Legacy helper only; no canonical FUN mapping retained here. `FUN_004792C0` is
-// documented as CreatePoint in Entity_LegacyTeleport.cpp, so the old address label was misleading.
-// Finds a free slot in the teleport-effect pool (DAT_07C80110, stride 0x70, ~12 entries).
-// Fills: active=1, entity_id, src_pos (world_pos + height_offset DAT_00552958), dst_pos.
-// Slots: [0x00]=active, [0x04]=entity_id, [0x10..0x18]=src_pos, [0x1C..0x24]=dst_pos,
-//        [0x0C]=param_4, [0x38..0x3B]=phase_flags, [0x48..0x4B]=state_chars.
+// Legacy name for CreatePoint's damage-popup allocator (not a teleport effect).
+// Keep a bounded render budget. At saturation replace the oldest popup so fresh
+// hits still appear, rather than dropping every new hit for the entire lifetime.
 void __cdecl Entity_TeleportAnim(float* world_pos, float entity_id, float* dst_pos, float param_4) {
-    // El bound es la cantidad de iteraciones (pool de 100 slots en globals.cpp),
-    // no la dirección absoluta del binario (`pcVar1 < 0x7c82cd0`).
-    char *pcVar1 = (char*)&DAT_07c80110[0];
-    for (int i = 0; i < 100; ++i) {
-        if (*pcVar1 == '\0') {
-            *pcVar1 = '\x01';
-            *(float*)(pcVar1 + 0x04) = entity_id;
-            *(float*)(pcVar1 + 0x10) = world_pos[0];
-            *(float*)(pcVar1 + 0x14) = world_pos[1];
-            *(float*)(pcVar1 + 0x18) = world_pos[2] + _DAT_00552958;
-            *(float*)(pcVar1 + 0x1c) = dst_pos[0];
-            *(float*)(pcVar1 + 0x20) = dst_pos[1];
-            *(float*)(pcVar1 + 0x24) = dst_pos[2];
-            *(float*)(pcVar1 + 0x0c) = param_4;
-            pcVar1[0x38] = pcVar1[0x39] = pcVar1[0x3a] = pcVar1[0x3b] = '\0';
-            pcVar1[0x48] = '\0'; pcVar1[0x49] = '\0';
-            pcVar1[0x4a] = ' ';  pcVar1[0x4b] = 'A';
-            return;
+    const int stride = 0x70;
+    const int count = sizeof(DAT_07c80110) / stride;
+    static int nextSlot = 0;
+    int selected = nextSlot;
+    float oldestLifetime = 11.0f; // new popups start at 10
+    for (int n = 0; n < count; ++n) {
+        const int i = (nextSlot + n) % count;
+        char* slot = DAT_07c80110 + i * stride;
+        if (!slot[0]) {
+            selected = i;
+            break;
         }
-        pcVar1 += 0x70;
+        const float lifetime = *(float*)(slot + 0x48);
+        if (lifetime < oldestLifetime) {
+            oldestLifetime = lifetime;
+            selected = i;
+        }
     }
+    nextSlot = (selected + 1) % count;
+    char* slot = DAT_07c80110 + selected * stride;
+    memset(slot, 0, stride);
+    slot[0] = 1;
+    // Value is passed as float bits by the legacy wrapper, including MISS (-1).
+    memcpy(slot + 0x04, &entity_id, sizeof(entity_id));
+    *(float*)(slot + 0x0c) = param_4;
+    *(float*)(slot + 0x10) = world_pos[0];
+    *(float*)(slot + 0x14) = world_pos[1];
+    *(float*)(slot + 0x18) = world_pos[2] + _DAT_00552958;
+    memcpy(slot + 0x1c, dst_pos, 3 * sizeof(float));
+    *(float*)(slot + 0x48) = 10.0f;
 }
 
 // Legacy helper only; no canonical FUN mapping retained here. `FUN_00474310` is

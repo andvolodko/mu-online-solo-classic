@@ -4,6 +4,7 @@
 // CreateEffect -- spawns a visual effect by type ID.
 
 #include "stdafx.h"
+#include "Render/EffectPool.h"
 
 
 namespace {
@@ -141,17 +142,10 @@ CreateEffect(int param_1,float *param_2,float *param_3,float *param_4,float *par
   pfVar12 = param_3;
 LAB_00460dd8:
   pfVar8 = (float *)0x0;
-  pfVar17 = (float *)&DAT_07b11670[0];
-  // El original corta con `if (0x7b2714f < (int)pfVar17)`, una dirección absoluta
-  // del binario. El pool DAT_07b11670 es de 200 × 0x1bc bytes: se recorre por
-  // cantidad de iteraciones.
-  {
-    bool found_slot = false;
-    for (int i = 0; i < 200; ++i, pfVar17 = pfVar17 + 0x6f) {
-      if (*(char *)pfVar17 == '\0') { found_slot = true; break; }
-    }
-    if (!found_slot) return (float *)0x0;
-  }
+  pfVar17 = (float*)AllocateEffectSlot(DAT_07b11670, 0x1bc, 128,
+      Hero && param_6 == (float*)Hero &&
+      (param_1 != 241 || (uintptr_t)param_5 <= 1));
+  if (!pfVar17) return nullptr;
   *(undefined1 *)pfVar17 = 1;
   *(short *)((int)pfVar17 + 2) = (short)param_1;
   // 00460DC0 writes SubType and Owner as raw DWORD fields.  The reconstructed

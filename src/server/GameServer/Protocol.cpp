@@ -35,8 +35,10 @@
 
 void ProtocolCore(BYTE head, BYTE* lpMsg, int size, int aIndex, int encrypt, int serial)
 {
+#ifdef SOLO_TRACE_PACKETS
 	printf("[ProtocolCore] aIndex=%d, head=0x%02X, sub=0x%02X, size=%d, enc=%d, serial=%d\n", aIndex, head, ((lpMsg[0] == 0xC1) ? lpMsg[3] : lpMsg[4]), size, encrypt, serial);
 	fflush(stdout);
+#endif
 
 	ConsoleProtocolLog(CON_PROTO_TCP_RECV, aIndex, lpMsg, size);
 

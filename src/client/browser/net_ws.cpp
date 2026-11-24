@@ -202,7 +202,7 @@ extern "C" int mu_net_send(SOCKET, const char* buf, int len, int) {
 
     EM_ASM({
         if (typeof window !== 'undefined' && window.soloBridge && window.soloBridge.send) {
-            var data = new Uint8Array(HEAPU8.subarray($0, $0 + $1));
+            var data = HEAPU8.subarray($0, $0 + $1);
             window.soloBridge.send(data);
         }
     }, buf, len);

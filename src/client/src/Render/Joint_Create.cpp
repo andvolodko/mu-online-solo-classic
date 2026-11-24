@@ -4,6 +4,7 @@
 // CreateJoint - creates a lightning/beam visual joint by type.
 
 #include "stdafx.h"
+#include "Render/EffectPool.h"
 
 
 /* WARNING: Globals starting with '_' overlap smaller symbols at the same address */
@@ -77,14 +78,10 @@ Joint_Create(int param_1,float *param_2,float *param_3,float *param_4,undefined4
   undefined4 stack0xffffff64 = 0;
   undefined4 stack0xffffff5c = 0;
 
-  pcVar14 = DAT_07b27150;
-  const uintptr_t __jp_end = (uintptr_t)DAT_07b27150 + sizeof(DAT_07b27150);
-  while (*pcVar14 != '\0') {
-    pcVar14 = pcVar14 + 0x9d8;
-    if ((uintptr_t)pcVar14 >= __jp_end) {
-      return nullptr;
-    }
-  }
+  pcVar14 = AllocateEffectSlot(DAT_07b27150, 0x9d8, 256,
+      Hero && param_6 == (int)Hero &&
+      !(param_1 == 1253 && param_5 == 0 && param_7 != 80.0f));
+  if (!pcVar14) return nullptr;
   *pcVar14 = '\x01';
   *(int *)(pcVar14 + 4) = param_1;
   *(undefined4 *)(pcVar14 + 8) = param_5;
@@ -183,6 +180,9 @@ Joint_Create(int param_1,float *param_2,float *param_3,float *param_4,undefined4
     *(int *)(pcVar14 + 0x9b8) = 49;
     *(float *)(pcVar14 + 0x0c) = param_7;
     *(int *)(pcVar14 + 0x54) = 6;
+    // CharacterMachine is plaintext in this port. The legacy XOR/refcount
+    // branch below looks up a nonexistent hash node and traps in WASM.
+    goto switchD_0046dee7_default;
   }
   if (param_1 < 0x4e9) {
     if (param_1 == 0x4e8) {

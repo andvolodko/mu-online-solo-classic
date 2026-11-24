@@ -93,9 +93,10 @@ void __cdecl Game_MainLoop(HDC param_1)
     CHK("ML/post_recv");
 
 #ifdef __EMSCRIPTEN__
-    // One logic tick per browser frame. A late frame must not run
-    // Game_CharSelectTick once for every missed 40 ms before it draws.
-    if (DAT_005616b8 > 0x27) {
+    // Retain elapsed combat time when rendering falls below 25 FPS.
+    // Bound catch-up to three ticks so a stalled tab cannot spiral forever.
+    int browserTicks = 0;
+    while (DAT_005616b8 > 0x27 && browserTicks++ < 3) {
 #else
     while (DAT_005616b8 > 0x27) {
 #endif

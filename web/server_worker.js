@@ -2,7 +2,8 @@
 const workerParams = (typeof self !== 'undefined' && self.location && self.location.search) 
     ? new URLSearchParams(self.location.search) 
     : new URLSearchParams('');
-const WORKER_VERSION = workerParams.get('v') || 'login103';
+const TRACE_PACKETS = workerParams.get('debugPackets') === '1';
+const WORKER_VERSION = workerParams.get('v') || 'login110';
 
 importScripts(`muserver.js?v=${WORKER_VERSION}`);
 
@@ -300,13 +301,15 @@ async function initServer(initialSaves = null, difficulty = 0) {
         // Register outgoing packet callback (Server -> Client)
         const sendCallback = Module.addFunction((ptr, size) => {
             const bytes = new Uint8Array(Module.HEAPU8.subarray(ptr, ptr + size));
-            const hex = Array.from(bytes.slice(0, Math.min(8, size))).map(b => b.toString(16).padStart(2, '0')).join(' ');
-            log(`[Worker] Server sent ${size} bytes to client (${hex})`, '#34d399');
+            if (TRACE_PACKETS) {
+                const hex = Array.from(bytes.subarray(0, 8)).map(b => b.toString(16).padStart(2, '0')).join(' ');
+                log(`[Worker] Server sent ${size} bytes to client (${hex})`, '#34d399');
+            }
             self.postMessage({
                 type: 'PACKET_FROM_SERVER',
-                data: Array.from(bytes),
+                data: bytes,
                 size: size
-            });
+            }, [bytes.buffer]);
         }, 'vii');
 
         Module._SoloServer_SetSendCallback(sendCallback);
@@ -459,8 +462,10 @@ self.onmessage = async function (e) {
         }
 
         case 'SEND_PACKET': {
-            const rawBytes = new Uint8Array(payload.bytes);
-            log(`[Worker] SEND_PACKET from client: ${rawBytes.length} bytes, hdr=0x${rawBytes[0].toString(16)}`, '#38bdf8');
+            const rawBytes = payload.bytes instanceof Uint8Array ? payload.bytes : new Uint8Array(payload.bytes);
+            if (TRACE_PACKETS && rawBytes.length) {
+                log(`[Worker] SEND_PACKET from client: ${rawBytes.length} bytes, hdr=0x${rawBytes[0].toString(16)}`, '#38bdf8');
+            }
             const ptr = Module._malloc(rawBytes.length);
             Module.HEAPU8.set(rawBytes, ptr);
             Module._SoloServer_ReceiveClientPacket(ptr, rawBytes.length);

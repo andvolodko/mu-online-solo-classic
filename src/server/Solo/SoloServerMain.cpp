@@ -17,6 +17,8 @@
 #include "PacketManager.h"
 #include "DSProtocol.h"
 
+// Define SOLO_TRACE_PACKETS for verbose protocol tracing in diagnostic builds.
+// Per-packet printf/flush otherwise floods the worker/main-thread message queue.
 static bool g_SoloServerInitialized = false;
 
 extern "C" {
@@ -160,8 +162,10 @@ SOLO_API void SoloServer_ReceiveClientPacket(const uint8_t* data, int size)
 	BYTE DecSerial = 0;
 	BYTE head = 0;
 
+#ifdef SOLO_TRACE_PACKETS
 	printf("[SoloServer] RecvPacket size=%d, header=0x%02X\n", size, data[0]);
 	fflush(stdout);
+#endif
 
 	if (header == 0xC3 || header == 0xC4)
 	{
@@ -174,8 +178,10 @@ SOLO_API void SoloServer_ReceiveClientPacket(const uint8_t* data, int size)
 			DecBuff[0] = header;
 			DecBuff[1] = DecSize;
 
+#ifdef SOLO_TRACE_PACKETS
 			printf("[SoloServer] C3 Decrypt: DecSize=%d, DecSerial=%d, head=0x%02X, sub=0x%02X\n", DecSize, DecSerial, head, DecBuff[3]);
 			fflush(stdout);
+#endif
 
 			if (!gPacketManager.AddData(&DecBuff[0], DecSize) || !gPacketManager.ExtractPacket(DecBuff))
 			{
@@ -185,8 +191,10 @@ SOLO_API void SoloServer_ReceiveClientPacket(const uint8_t* data, int size)
 				return;
 			}
 
+#ifdef SOLO_TRACE_PACKETS
 			printf("[SoloServer] ProtocolCore dispatch: head=0x%02X, sub=0x%02X, DecSize=%d, serial=%d\n", head, DecBuff[3], DecSize, DecSerial);
 			fflush(stdout);
+#endif
 
 			ProtocolCore(head, DecBuff, DecSize, playerIndex, 1, DecSerial);
 		}
@@ -220,9 +228,11 @@ SOLO_API void SoloServer_ReceiveClientPacket(const uint8_t* data, int size)
 		}
 
 		head = (header == 0xC1) ? DecBuff[2] : DecBuff[3];
+#ifdef SOLO_TRACE_PACKETS
 		BYTE sub = (header == 0xC1) ? ((size > 3) ? DecBuff[3] : 0) : ((size > 4) ? DecBuff[4] : 0);
 		printf("[SoloServer] ProtocolCore dispatch: head=0x%02X, sub=0x%02X, size=%d\n", head, sub, size);
 		fflush(stdout);
+#endif
 
 		ProtocolCore(head, DecBuff, size, playerIndex, 0, -1);
 	}

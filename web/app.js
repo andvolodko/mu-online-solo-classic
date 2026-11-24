@@ -4,7 +4,7 @@
  * ============================================================================
  */
 
-const BUILD_VERSION = window.BUILD_VERSION = 'login103';
+const BUILD_VERSION = window.BUILD_VERSION = 'login110';
 
 // ── 1. Virtual Touch Controls & On-Screen Keyboard ──────────────────────────
 
@@ -356,7 +356,8 @@ window.muInstallAudio = function () {
     if (worker) return;
     currentRealm = difficulty;
     console.log('[SoloBridge] Initializing Server Web Worker for difficulty realm:', difficulty);
-    worker = new Worker(`server_worker.js?v=${BUILD_VERSION}`);
+    const tracePackets = new URLSearchParams(window.location.search).get('debugPackets') === '1';
+    worker = new Worker(`server_worker.js?v=${BUILD_VERSION}${tracePackets ? '&debugPackets=1' : ''}`);
 
     worker.onmessage = function (e) {
       const msg = e.data;
@@ -376,7 +377,7 @@ window.muInstallAudio = function () {
           window.soloBridge.connect(r);
         }
       } else if (msg.type === 'PACKET_FROM_SERVER') {
-        deliverPacketToClient(new Uint8Array(msg.data));
+        deliverPacketToClient(msg.data instanceof Uint8Array ? msg.data : new Uint8Array(msg.data));
       } else if (msg.type === 'AUTO_SAVE_DATA') {
         if (msg.saves) {
           try {
@@ -496,10 +497,12 @@ window.muInstallAudio = function () {
         console.warn('[SoloBridge] Worker not ready to send packet');
         return;
       }
+      // Copy once: a WASM heap view must never be transferred/detached.
+      const bytes = new Uint8Array(uint8Data);
       worker.postMessage({
         action: 'SEND_PACKET',
-        payload: { bytes: Array.from(uint8Data) }
-      });
+        payload: { bytes: bytes }
+      }, [bytes.buffer]);
     },
     disconnect: function () {
       if (worker && workerReady) {
@@ -717,6 +720,8 @@ window.muUpdateRealmBadge = function (mode) {
 };
 
 window.muOpenInfoModal = function () {
+  var build = document.getElementById('muBuildVersion');
+  if (build) build.textContent = '(' + BUILD_VERSION + ')';
   var modal = document.getElementById('muInfoModal');
   if (!modal) return;
   modal.classList.add('open');
