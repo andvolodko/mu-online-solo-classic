@@ -3,7 +3,7 @@ const workerParams = (typeof self !== 'undefined' && self.location && self.locat
     ? new URLSearchParams(self.location.search) 
     : new URLSearchParams('');
 const TRACE_PACKETS = workerParams.get('debugPackets') === '1';
-const WORKER_VERSION = workerParams.get('v') || 'login110';
+const WORKER_VERSION = workerParams.get('v') || 'login111';
 
 importScripts(`muserver.js?v=${WORKER_VERSION}`);
 
